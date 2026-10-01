@@ -150,8 +150,8 @@ main { flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: colu
 /* ------------------------------------------------------------ Gesamtplan */
 .gridwrap { flex: 1; min-height: 0; min-width: 0; width: 100%; max-width: 100%; overflow: auto; -webkit-overflow-scrolling: touch; background: var(--paper); overscroll-behavior: contain; touch-action: pan-x pan-y; will-change: transform; }
 table.plan { border-collapse: collapse; border-spacing: 0; font-size: 14px; table-layout: fixed; width: max-content; max-width: none; }
-.plan col.cd { width: 92px; min-width: 92px; }
-.plan col.cc { width: 62px; min-width: 62px; }
+.plan col.cd { min-width: 92px; }
+.plan col.cc { min-width: 62px; }
 .plan th, .plan td { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 0; overflow: hidden; }
 .plan thead th {
   position: sticky; top: 0; z-index: 3; background: var(--paper);
