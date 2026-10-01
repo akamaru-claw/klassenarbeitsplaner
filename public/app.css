@@ -166,9 +166,9 @@ table.plan { border-collapse: separate; border-spacing: 0; font-size: 14px; tabl
 /* Tablet-/iPad-Landscape: kompakte Spalten, damit alle Klassen nebeneinander passen */
 @media (orientation: landscape) and (max-width: 1260px) {
   table.plan { font-size: 12px; }
-  .plan .cd { min-width: 48px; width: 48px; padding: 0 4px; font-size: 11px; }
-  .plan thead .cd { padding: 0 4px; }
-  .plan th:not(.cd), .plan td.cell, .plan td.slots, .plan td.term { min-width: 36px; width: 36px; }
+  .plan .cd { min-width: 48px !important; width: 48px !important; padding: 0 4px !important; font-size: 11px; }
+  .plan thead .cd { padding: 0 4px !important; }
+  .plan th:not(.cd), .plan td.cell, .plan td.slots, .plan td.term { min-width: 36px !important; width: 36px !important; }
   .colhead { font-size: 12px; min-height: 30px; }
   .plan tr.day > * { height: 30px; }
   .plan tr.day .cd { font-size: 11px; }
