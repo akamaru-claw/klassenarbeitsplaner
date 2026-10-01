@@ -1,0 +1,20 @@
+# /etc/systemd/system/klassenarbeitsplaner.service
+[Unit]
+Description=Klassenarbeitsplaner
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/klassenarbeitsplaner
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=3
+User=klassenarbeitsplaner
+# Die .env liest server.js selbst; NoNewPrivileges und Schutz des Systems:
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/opt/klassenarbeitsplaner/data /opt/klassenarbeitsplaner/public/img
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

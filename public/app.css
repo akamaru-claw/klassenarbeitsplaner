@@ -36,8 +36,6 @@
 
   color-scheme: light;
   box-sizing: border-box;
-  padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -63,12 +61,11 @@
 }
 
 *, *::before, *::after { box-sizing: inherit; }
-html { height: 100%; width: 100%; overflow: hidden; overscroll-behavior: none; scroll-padding-top: env(safe-area-inset-top, 0px); }
+/* Die App füllt immer genau das Fenster. Gescrollt wird nur in .gridwrap und .scroll. */
+html, body { width: 100%; height: 100%; overflow: hidden; }
+html { overscroll-behavior: none; }
 body {
-  position: relative;
-  height: 100%; width: 100%;
-  margin: 0; overflow: hidden; overscroll-behavior: none;
-  background: var(--canvas); color: var(--ink);
+  margin: 0; background: var(--canvas); color: var(--ink);
   font: 400 16px/1.45 var(--font); -webkit-text-size-adjust: 100%;
 }
 button, input, select, textarea { font: inherit; color: inherit; }
@@ -77,17 +74,24 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .booting { padding: 40px 24px; color: var(--muted); }
 
-#app { position: fixed; inset: 0; display: flex; flex-direction: column; overflow: hidden; width: 100%; max-width: 100%; }
+#app {
+  position: fixed; inset: 0; width: 100%; max-width: 100%;
+  display: flex; flex-direction: column;
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+#app > * { min-width: 0; min-height: 0; }
+.gridwrap, .scroll {
+  overflow: auto; overscroll-behavior: none;
+  will-change: transform; touch-action: pan-x pan-y; -webkit-overflow-scrolling: touch;
+}
 
 /* ------------------------------------------------------------ Kopfzeile */
 .top {
   background: var(--bar); color: var(--on-bar);
   display: flex; align-items: center; gap: 12px 20px; flex-wrap: wrap;
   padding: 8px max(16px, env(safe-area-inset-right, 0px)) 8px max(16px, env(safe-area-inset-left, 0px));
-  flex: 0 0 auto; min-width: 0;
 }
-.brand { display: flex; align-items: center; gap: 12px; margin-right: auto; min-width: 0; overflow: hidden; }
-.brand > div { min-width: 0; }
+.brand { display: flex; align-items: center; gap: 12px; margin-right: auto; min-width: 0; }
 .brand img { height: 34px; width: auto; display: block; }
 .brand strong { display: block; font-size: 19px; font-weight: 750; letter-spacing: .005em; line-height: 1.15; }
 .brand span { display: block; font-size: 13px; opacity: .85; }
@@ -112,7 +116,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .demo { background: var(--brand-soft); }
 
 /* ------------------------------------------------------------ Werkzeugleiste */
-main { flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column; overflow: hidden; width: 100%; max-width: 100%; }
+main { flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column; }
 .bar {
   display: flex; align-items: center; gap: 10px 16px; flex-wrap: wrap;
   padding: 10px 16px; background: var(--paper); border-bottom: 1px solid var(--line);
@@ -148,52 +152,25 @@ main { flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: colu
 .hint .sl { vertical-align: middle; display: inline-flex; margin: 0 2px; }
 
 /* ------------------------------------------------------------ Gesamtplan */
-.gridwrap { flex: 1; min-height: 0; min-width: 0; width: 100%; max-width: 100%; overflow: auto; -webkit-overflow-scrolling: touch; background: var(--paper); overscroll-behavior: contain; touch-action: pan-x pan-y; will-change: transform; }
-table.plan { border-collapse: collapse; border-spacing: 0; font-size: 14px; table-layout: fixed; width: max-content; max-width: none; }
-.plan col.cd { min-width: 92px; }
-.plan col.cc { min-width: 62px; }
-.plan th, .plan td { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 0; overflow: hidden; }
+.gridwrap { flex: 1; min-height: 0; min-width: 0; background: var(--paper); }
+/* Spaltenbreiten kommen aus <colgroup>, nicht aus den Zellen */
+table.plan { border-collapse: separate; border-spacing: 0; font-size: 14px; table-layout: fixed; width: max-content; }
+.plan col.cd { width: 92px; min-width: 92px; }
+.plan col.cc { width: 62px; min-width: 62px; }
+.plan th, .plan td { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 0; }
 .plan thead th {
   position: sticky; top: 0; z-index: 3; background: var(--paper);
   border-bottom: 2px solid var(--brand); height: 40px; font-weight: 700;
 }
 .plan .cd {
   position: sticky; left: 0; z-index: 2; background: var(--paper);
-  text-align: left; padding: 0 10px; font-weight: 500; white-space: nowrap;
+  text-align: left; padding: 0 10px; font-weight: 500; white-space: nowrap; overflow: hidden;
   font-variant-numeric: tabular-nums;
 }
 .plan thead .cd { z-index: 4; }
-
-/* Tablet-/iPad-Landscape: kompakte Spalten, damit alle Klassen nebeneinander passen */
-@media (orientation: landscape) and (max-width: 1260px) {
-  table.plan { width: 100%; font-size: 12px; }
-  .plan col.cd { width: 48px; min-width: 48px; }
-  .plan col.cc { width: 36px; min-width: 36px; }
-  .plan .cd { padding: 0 4px; font-size: 11px; }
-  .plan thead .cd { padding: 0 4px; }
-  .colhead { font-size: 12px; min-height: 30px; }
-  .plan tr.day > * { height: 30px; }
-  .plan tr.day .cd { font-size: 11px; }
-  .sl { gap: 2px; }
-  .sl i { width: 9px; height: 7px; }
-  .chip { padding: 1px 3px; min-height: 22px; margin: 0; }
-  .chip b { font-size: 11px; }
-  .chip small { font-size: 9px; }
-  td.off div, tr.band div { left: 54px; padding: 0 6px; font-size: 12px; }
-}
-
-/* Portrait-Tablets: etwas mehr Platz pro Zelle, aber trotzdem kompakt */
-@media (orientation: portrait) and (max-width: 900px) {
-  table.plan { width: 100%; }
-  .plan col.cd { width: 64px; min-width: 64px; }
-  .plan col.cc { width: 42px; min-width: 42px; }
-  .plan .cd { padding: 0 5px; }
-  .colhead { font-size: 13px; }
-}
 .colhead {
-  border: 0; background: none; width: 100%; height: 100%; min-height: 38px; padding: 0 2px;
+  border: 0; background: none; width: 100%; height: 100%; min-height: 38px; padding: 0 4px;
   font-weight: 750; font-size: 15px; cursor: pointer; color: var(--ink);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .colhead:hover { color: var(--brand); text-decoration: underline; }
 
@@ -259,8 +236,8 @@ td.off div, tr.band div { position: sticky; left: 104px; display: inline-block; 
 .sw.mine { background: var(--brand); border-color: var(--brand); }
 
 /* ------------------------------------------------------------ Klassenansicht */
-.scroll { flex: 1; min-height: 0; min-width: 0; width: 100%; max-width: 100%; overflow: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-x pan-y; will-change: transform; }
-.page { width: 100%; max-width: 1040px; margin: 0 auto; padding: 16px 16px 40px; box-sizing: border-box; }
+.scroll { flex: 1; min-height: 0; min-width: 0; }
+.page { max-width: 1040px; margin: 0 auto; padding: 16px 16px 40px; }
 .cpick { display: grid; gap: 6px; margin-bottom: 18px; }
 .cpick .row { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
 .cpick .g { width: 34px; color: var(--muted); font-size: 14px; font-weight: 700; }
@@ -439,10 +416,6 @@ fieldset label { display: flex; gap: 10px; align-items: center; min-height: 34px
   .views button { flex: 1; padding: 6px 8px; }
   .bar { padding: 8px 12px; }
   .bar .grades { width: 100%; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
-  table.plan { width: 100%; }
-  .plan col.cd { width: 78px; min-width: 78px; }
-  .plan col.cc { width: 50px; min-width: 50px; }
-  .plan .cd { min-width: 78px; width: 78px; padding: 0 6px; }
   .cls .wkc { width: 64px; }
   .cls .wkc span { display: none; }
   .cls .cnt { width: 40px; }
@@ -450,14 +423,60 @@ fieldset label { display: flex; gap: 10px; align-items: center; min-height: 34px
   .strip { grid-template-columns: 34px repeat(5, 1fr); }
   .hide-sm { display: none; }
   .show-sm { display: inline; }
-  .colhead { font-size: 13px; min-height: 32px; }
-  table.plan { font-size: 8pt; width: 100%; }
-  .plan thead th { position: static; height: auto; padding: 3px 0; }
-  .plan .cd { position: static; min-width: 0; width: 78px; padding: 0 6px; }
-  .plan thead .cd { position: sticky; top: 0; z-index: 3; }
-  .sl i { width: 9px; height: 7px; }
 }
 @media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
+
+
+/* ------------------------------------------------------------ Schmale Spalten */
+/* Tablet quer: 27 Klassen passen ohne Querscrollen (48 + 27 × 36 = 1020 px) */
+@media (orientation: landscape) and (max-width: 1260px) {
+  table.plan { width: 100%; font-size: 12px; }
+  .plan col.cd { width: 48px; min-width: 48px; }
+  .plan col.cc { width: 36px; min-width: 36px; }
+}
+@media (orientation: portrait) and (max-width: 900px) {
+  table.plan { width: 100%; }
+  .plan col.cd { width: 64px; min-width: 64px; }
+  .plan col.cc { width: 42px; min-width: 42px; }
+}
+@media (max-width: 720px) {
+  .plan col.cd { width: 78px; min-width: 78px; }
+  .plan col.cc { width: 50px; min-width: 50px; }
+  table.plan { width: 100%; }
+}
+/* Kopfzeile auf Tablets einzeilig halten, damit mehr Plan sichtbar ist */
+@media (max-width: 1260px) and (min-width: 721px) {
+  .brand span { display: none; }
+  .brand strong { font-size: 17px; }
+  .top { gap: 10px 12px; padding-top: 6px; padding-bottom: 6px; }
+  .views button { padding: 5px 10px; }
+  .me button { padding: 4px 9px; }
+  .bar { padding: 8px 12px; }
+}
+/* Inhalte an schmale Spalten anpassen */
+@media (orientation: landscape) and (max-width: 1260px), (orientation: portrait) and (max-width: 900px) {
+  .plan .cd { padding: 0 4px; font-size: 11.5px; }
+  .plan tr.day .cd { font-size: 11.5px; line-height: 1.15; }
+  .plan .cd .wd, .plan .cd .dm { display: block; }
+  .plan tr.wk .rng { display: none; }
+  .plan tr.wk .kw { font-size: 11.5px; }
+  .colhead { font-size: 12.5px; padding: 0; min-height: 34px; }
+  .plan thead th { height: 34px; }
+  td.cell { padding: 2px; }
+  .chip { justify-content: center; padding: 2px 1px; min-height: 24px; gap: 0; }
+  .chip b { font-size: 12px; }
+  .chip small { display: none; }
+  .sl { gap: 2px; }
+  .sl i { width: 8px; height: 8px; border-width: 1.5px; }
+  td.term { font-size: 10px; padding: 2px; word-break: break-word; }
+  td.off div, tr.band div { left: 52px; }
+}
+@media (max-width: 720px) {
+  .plan .cd { padding: 0 6px; font-size: 13px; }
+  .plan tr.day .cd { font-size: 13px; }
+  .plan .cd .wd, .plan .cd .dm { display: inline; }
+  td.off div, tr.band div { left: 84px; }
+}
 
 /* ------------------------------------------------------------ Druck */
 @page { margin: 9mm; }
@@ -467,7 +486,8 @@ fieldset label { display: flex; gap: 10px; align-items: center; min-height: 34px
   :root { --brand: #0f620e; --brand-ink: #0c4d0b; --brand-soft: #e6f0e3; --on-brand: #fff; --paper: #fff; --canvas: #f3f3f3;
     --ink: #000; --muted: #444; --line: #9a9a9a; --line-strong: #666; --week-bg: #e9efe7; color-scheme: light;
     padding: 0; }
-  body { background: #fff; height: auto; font-size: 11pt; }
+  html, body { overflow: visible !important; height: auto !important; width: auto !important; }
+  body { background: #fff; font-size: 11pt; }
   #app, dialog, #toast { display: none !important; }
   #print { display: block; }
   #print .p-plan { page: plan; }
@@ -477,10 +497,12 @@ fieldset label { display: flex; gap: 10px; align-items: center; min-height: 34px
   .ph h1 { font-size: 16pt; margin: 0; }
   .ph p { margin: 0; font-size: 9.5pt; color: #333; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  table.plan { font-size: 8pt; width: 100%; }
+  table.plan { font-size: 8pt; width: 100% !important; }
+  .plan col.cd { width: 70px !important; min-width: 0 !important; }
+  .plan col.cc { width: auto !important; min-width: 0 !important; }
+  .plan .cd .wd, .plan .cd .dm { display: inline !important; }
   .plan thead th { position: static; height: auto; padding: 3px 0; }
-  .plan .cd { position: static; min-width: 0; width: 70px; padding: 0 4px; }
-  .plan th:not(.cd), .plan td.cell, .plan td.slots, .plan td.term { min-width: 0; width: auto; }
+  .plan .cd { position: static; padding: 0 4px; }
   .plan tr.day > * { height: 20px; }
   .plan tr.wk > * { height: 14px; }
   .plan tr { break-inside: avoid; }
@@ -498,4 +520,18 @@ fieldset label { display: flex; gap: 10px; align-items: center; min-height: 34px
   .cls td.cell, .cls td.term, .cls td.off { height: 34px; }
   .cls tr { break-inside: avoid; }
   .cls .dn { font-size: 8pt; }
+}
+
+/* QR-Code */
+.qrbox { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+.qrbox img { width: 180px; height: 180px; border: 1px solid var(--line); border-radius: 6px; background: #fff; image-rendering: pixelated; }
+@page qr { size: A4 portrait; margin: 20mm; }
+@media print {
+  #print .p-qr { page: qr; text-align: center; padding-top: 10mm; }
+  .p-qr .p-logo { width: 70mm; height: auto; }
+  .p-qr h1 { font-size: 30pt; margin: 10mm 0 4mm; }
+  .p-qr p { font-size: 15pt; margin: 0 0 8mm; }
+  .p-qr .p-code { width: 110mm; height: 110mm; image-rendering: pixelated; }
+  .p-qr .p-url { font-size: 14pt; font-weight: 700; margin-top: 6mm; }
+  .p-qr .p-note { font-size: 11pt; color: #444; }
 }

@@ -7,19 +7,24 @@ und dass alle von überall denselben Stand sehen.
 Keine npm-Pakete, nur Node.js ab Version 20. Alle Daten liegen in einer Datei: `data/db.json`
 (im Docker-Volume unter `/data`).
 
-## Starten
+## Starten (Server unter /opt/klassenarbeitsplaner)
 
-    ADMIN_PASSWORD='langes-passwort' KOLLEGIUM_PASSWORD='fuers-kollegium' \
-    SESSION_SECRET="$(openssl rand -hex 32)" node server.js
+    cp .env.example .env        # ausfüllen, SESSION_SECRET: openssl rand -hex 32
+    chmod 600 .env
+    node server.js              # läuft auf http://127.0.0.1:3020
 
-Oder mit Docker: Werte in `docker-compose.yml` eintragen, dann `docker compose up -d --build`.
+Dauerhaft als Dienst: `klassenarbeitsplaner.service` nach `/etc/systemd/system/` kopieren, Benutzer anpassen,
+dann `systemctl enable --now klassenarbeitsplaner`. Der Server liest die `.env` selbst.
+
+Alternativ Docker: Werte in `docker-compose.yml` eintragen, dann `docker compose up -d --build`.
 
 | Variable | Bedeutung |
 |---|---|
-| `ADMIN_PASSWORD` | Passwort für die Verwaltung (Pflicht, mind. 10 Zeichen) |
-| `KOLLEGIUM_PASSWORD` | Gemeinsames Passwort für alle Lehrkräfte. Nur beim **ersten** Start nötig, danach in der Verwaltung änderbar |
+| `ADMIN_PASSWORD` | Passwort für die Verwaltung (mind. 10 Zeichen). Maßgeblich ist immer die `.env`, in `db.json` steht nur der scrypt-Hash |
+| `KOLLEGIUM_PASSWORD` | Gemeinsames Passwort für alle Lehrkräfte. Gilt beim **ersten** Start, danach in der Verwaltung änderbar. Passt der Wert zum gespeicherten Passwort, erzeugt der Server daraus beim Start den QR-Code |
 | `SESSION_SECRET` | Fester Zufallswert (mind. 32 Zeichen), damit Anmeldungen einen Neustart überstehen |
-| `PORT` | Standard 3000 |
+| `PORT` / `HOST` | Standard 3020 und 127.0.0.1 (in Docker 0.0.0.0) |
+| `PUBLIC_URL` | Adresse im QR-Code, Standard `https://klassenarbeiten.mauri-tools.de` |
 | `DATA_DIR` | Speicherort der Daten, Standard `./data` |
 | `TRUST_PROXY` | `1` hinter einem Reverse-Proxy (echte IP für die Sperre nach Fehlversuchen) |
 | `COOKIE_SECURE` | Standard an. Nur auf `0` setzen, wenn ohne HTTPS im Schulnetz betrieben |
@@ -29,11 +34,29 @@ Oder mit Docker: Werte in `docker-compose.yml` eintragen, dann `docker compose u
 ## Reverse-Proxy (Caddy, HTTPS automatisch)
 
     klassenarbeiten.mauri-tools.de {
-        reverse_proxy 127.0.0.1:3010
+        reverse_proxy 127.0.0.1:3020
     }
 
 In EduPage am besten einen **Link** auf die Seite setzen. Ein iframe funktioniert wegen der
 Anmelde-Cookies in Safari und künftig auch in Chrome nicht zuverlässig.
+
+## QR-Code zum Anmelden
+
+Der Server schreibt `public/img/qr-login.png` mit dem Link `PUBLIC_URL/?login=<Kollegiums-Passwort>`:
+beim Start (wenn `KOLLEGIUM_PASSWORD` zum gespeicherten Passwort passt) und bei jeder Passwortänderung in der Verwaltung.
+Die Datei wird **nur an angemeldete Geräte** ausgeliefert, sonst 404. Sie steht in `.gitignore`, weil sie das Passwort enthält.
+Unter „Daten und Zugang“ gibt es eine Druckvorlage (A4) für den Aushang.
+
+Nach dem Scannen meldet die Seite das Gerät an und entfernt `?login=` sofort aus Adresszeile und Verlauf.
+Im Zugriffsprotokoll des Reverse-Proxys taucht der Link trotzdem auf, falls dort Logging mit Query-Strings aktiv ist.
+
+## Darstellung und Aktualisierung
+
+- Die App füllt immer genau das Fenster, gescrollt wird nur im Plan. Auf dem iPad quer passen 27 Klassen
+  ohne Querscrollen (Spalten über `<colgroup>`, 48 px Datum + 36 px pro Klasse).
+- `index.html` wird mit `app.css?v=…`, `core.js?v=…`, `app.js?v=…` ausgeliefert (Größe und Änderungszeit der Datei).
+  CSS, JS und HTML gehen mit `Cache-Control: no-store, no-cache, must-revalidate` raus, Bilder und Schrift werden 30 Tage gecacht.
+  Neue Versionen sind also nach dem Neuladen sofort da, ohne Neustart des Servers.
 
 ## Inbetriebnahme
 
@@ -95,7 +118,9 @@ ohne Server läuft (Verwaltungs-Passwort dort: `demo`). Gut zum Vorführen in de
 
 ## Dateien
 
-- `server.js` – Webserver, Anmeldung, Speicherung
+- `server.js` – Webserver, Anmeldung, Speicherung, QR-Code
+- `lib/qrcode-generator.js` – QR-Erzeugung von Kazuhiko Arase (MIT-Lizenz, unverändert)
+- `.env.example`, `klassenarbeitsplaner.service` – Vorlagen für Konfiguration und systemd
 - `public/core.js` – Kalender, NRW-Feiertage, Regelprüfung, API-Logik (läuft auf Server und im Browser)
 - `public/app.js`, `public/app.css`, `public/index.html` – Oberfläche
 - `public/fonts/` – Atkinson Hyperlegible Next (SIL Open Font License, siehe `OFL.txt`)

@@ -16,13 +16,13 @@ let app = read(pub('app.js'));
 for (const img of ['img/logo-green.png', 'img/emblem-white.png']) app = app.split(img).join(dataUri(img, 'image/png'));
 
 let html = read(pub('index.html'))
-  .replace('<link rel="stylesheet" href="app.css">', () => `<style>\n${css}\n</style>`)
+  .replace(/<link rel="stylesheet" href="app\.css[^"]*">/, () => `<style>\n${css}\n</style>`)
   .replace('href="img/icon-64.png"', () => `href="${dataUri('img/icon-64.png', 'image/png')}"`)
   .replace('href="img/icon-180.png"', () => `href="${dataUri('img/icon-180.png', 'image/png')}"`)
   .replace('<title>Klassenarbeitsplaner – Mauritius-Gymnasium Büren</title>', '<title>Klassenarbeitsplaner (Demo) – Mauritius-Gymnasium Büren</title>')
-  .replace('<script src="core.js"></script>', () => inlineScript(read(pub('core.js'))) + '\n' +
+  .replace(/<script src="core\.js[^"]*"><\/script>/, () => inlineScript(read(pub('core.js'))) + '\n' +
     inlineScript(read(path.join(__dirname, 'demo-data.js'))) + '\n' + inlineScript(read(path.join(__dirname, 'demo-shim.js'))))
-  .replace('<script src="app.js"></script>', () => inlineScript(app));
+  .replace(/<script src="app\.js[^"]*"><\/script>/, () => inlineScript(app));
 
 fs.mkdirSync(path.join(root, 'dist'), { recursive: true });
 const out = path.join(root, 'dist', 'klassenarbeitsplaner-demo.html');

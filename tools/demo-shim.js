@@ -29,6 +29,7 @@
     }
     if (path === '/api/logout') { role = null; return json(200, { role: null }); }
     if (path === '/api/admin/logout') { role = 'staff'; return json(200, { role }); }
+    if (path === '/api/admin/qr') return role === 'admin' ? json(200, { exists: false, url: location.origin }) : json(403, { error: 'Nur für die Verwaltung.' });
     if (path === '/api/admin/password') return role === 'admin' ? json(200, { ok: true }) : json(403, { error: 'Nur für die Verwaltung.' });
     if (path === '/api/state' && method === 'GET' && headers['If-None-Match'] === `"v${db.version}"`) return new Response(null, { status: 304 });
     let who = '';

@@ -3,7 +3,7 @@ services:
     build: .
     restart: unless-stopped
     ports:
-      - "127.0.0.1:3010:3000"
+      - "127.0.0.1:3020:3020"
     environment:
       ADMIN_PASSWORD: "hier-ein-langes-passwort-fuer-die-verwaltung"
       KOLLEGIUM_PASSWORD: "nur-beim-ersten-start-noetig"

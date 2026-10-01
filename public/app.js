@@ -120,21 +120,19 @@
 
   // ------------------------------------------------------------ Start
   async function boot() {
-    // Auto-Login via QR-Code (?login=Passwort)
+    // QR-Link: ?login=<Passwort>. Sofort aus Adresszeile und Verlauf entfernen.
     const params = new URLSearchParams(location.search);
-    const autoPw = params.get('login');
-    if (autoPw) {
-      try {
-        await api('POST', '/api/login', { password: autoPw, role: 'staff' });
-        S.role = 'staff';
-        params.delete('login');
-        history.replaceState(null, '', location.pathname + (params.toString() ? '?' + params.toString() : ''));
-        await startApp();
-        toast('Automatisch angemeldet.');
-        return;
-      } catch (e) { /* fall through to normal login */ }
+    const qrPw = params.get('login');
+    if (qrPw !== null) {
+      params.delete('login');
+      const rest = params.toString();
+      history.replaceState(null, '', location.pathname + (rest ? '?' + rest : '') + location.hash);
     }
     try { S.role = (await api('GET', '/api/session')).role; } catch (e) { S.role = null; }
+    if (!S.role && qrPw) {
+      try { await api('POST', '/api/login', { password: qrPw, role: 'staff' }); S.role = 'staff'; }
+      catch (e) { renderLogin(); $('#loginErr').textContent = 'Der QR-Code ist nicht mehr gültig. Bitte das aktuelle Passwort eingeben.'; return; }
+    }
     if (!S.role) return renderLogin();
     await startApp();
   }
@@ -225,10 +223,8 @@
   function planTable(cols, from, to, forPrint) {
     const set = S.state.settings, cal = K.calendar(set), I = indexState(), today = K.todayISO();
     const n = cols.length;
-    const colClass = forPrint ? 'cc' : 'cc';
-    let h = `<table class="plan${forPrint ? ' p-plan' : ''}"><colgroup><col class="cd" width="92">`;
-    h += cols.map(() => `<col class="${colClass}" width="62">`).join('');
-    h += `</colgroup><thead><tr><th class="cd" scope="col"><span class="sr">Datum</span></th>`;
+    let h = `<table class="plan${forPrint ? ' p-plan' : ''}"><colgroup><col class="cd" width="92">${'<col class="cc" width="62">'.repeat(n)}</colgroup>` +
+      '<thead><tr><th class="cd" scope="col"><span class="sr">Datum</span></th>';
     h += cols.map(c => forPrint ? `<th scope="col">${esc(c)}</th>`
       : `<th scope="col"><button type="button" class="colhead" data-cls="${esc(c)}" title="Plan der ${esc(c)} öffnen">${esc(c)}</button></th>`).join('');
     h += '</tr></thead><tbody>';
@@ -259,7 +255,7 @@
       }
       const cls = ['day'];
       if (d.date === today) cls.push('today'); else if (d.date < today) cls.push('past');
-      h += `<tr class="${cls.join(' ')}" data-d="${d.date}"><th class="cd" scope="row">${K.fmtShort(d.date)}</th>`;
+      h += `<tr class="${cls.join(' ')}" data-d="${d.date}"><th class="cd" scope="row"><span class="wd">${K.WD[d.dow]}</span> <span class="dm">${K.fmtDM(d.date)}</span></th>`;
       if (d.kind !== 'school') {
         h += `<td class="off" colspan="${n}"><div>${esc(d.label)}${d.kind === 'sperre' ? ': keine Klassenarbeiten' : ''}</div></td></tr>`;
         continue;
@@ -1013,6 +1009,19 @@
       : '<div class="empty"><p>Noch keine Änderungen.</p></div>';
   }
 
+  function printQR(url) {
+    $('#print').innerHTML = `<div class="p-qr">
+      <img class="p-logo" src="img/logo-green.png" alt="">
+      <h1>Klassenarbeitsplaner</h1>
+      <p>Code mit dem Handy oder Tablet scannen, dann ist das Gerät angemeldet.</p>
+      <img class="p-code" src="img/qr-login.png?t=${Date.now()}" alt="">
+      <p class="p-url">${esc(url.replace(/^https?:\/\//, ''))}</p>
+      <p class="p-note">Nur für das Kollegium. Bitte nicht im Schülerbereich aushängen.</p></div>`;
+    const img = $('#print .p-code');
+    const go = () => setTimeout(() => window.print(), 60);
+    if (img.complete) go(); else img.onload = go;
+  }
+
   // Daten und Zugang
   function download(name, text, type) {
     const a = document.createElement('a');
@@ -1034,6 +1043,9 @@
         <div class="actions"><input type="file" id="impFile" accept=".csv,.txt,text/csv"><span class="spacer"></span>
           <button type="button" class="btn" id="impCheck">Prüfen</button><button type="button" class="btn primary" id="impGo" disabled>Importieren</button></div>
         <div id="impOut"></div></div>
+      <div class="card"><h3>QR-Code zum Anmelden</h3>
+        <p>Wer den Code scannt, ist sofort angemeldet. Er enthält das Kollegiums-Passwort, also nur dort aushängen, wo keine Schülerinnen und Schüler hinkommen. Nach einer Passwortänderung wird er automatisch erneuert.</p>
+        <div id="qrBox" class="qrbox"><p class="muted">Wird geladen …</p></div></div>
       <div class="card"><h3>Kollegiums-Passwort</h3>
         <p>Nach dem Ändern müssen sich alle Geräte neu anmelden. Sinnvoll zum Schuljahreswechsel oder wenn das Passwort die Runde gemacht hat.</p>
         <div class="actions"><input class="inp" type="text" id="pwNew" minlength="6" autocomplete="off" placeholder="Neues Passwort, mindestens 6 Zeichen"><button type="button" class="btn" id="pwBtn">Passwort ändern</button></div>
@@ -1046,6 +1058,17 @@
         <div class="actions"><input class="inp" id="wipeConfirm" autocomplete="off" placeholder="Zum Bestätigen LÖSCHEN eintippen"><button type="button" class="btn danger" id="wipeBtn">Alle Einträge löschen</button></div>
         <p class="err" id="wipeErr" role="alert"></p></div>`;
 
+    const drawQR = async () => {
+      try {
+        const q = await api('GET', '/api/admin/qr');
+        $('#qrBox').innerHTML = q.exists
+          ? `<img src="img/qr-login.png?t=${Date.now()}" alt="QR-Code zum Anmelden" width="180" height="180">
+             <div class="actions"><button type="button" class="btn" id="qrPrint">Aushang drucken</button></div>`
+          : '<p class="muted">Noch kein QR-Code vorhanden. Er entsteht, sobald unten ein Kollegiums-Passwort gesetzt wird oder KOLLEGIUM_PASSWORD in der .env zum gespeicherten Passwort passt.</p>';
+        if (q.exists) $('#qrPrint').onclick = () => printQR(q.url);
+      } catch (e) { adminError(e, $('#qrBox')); }
+    };
+    drawQR();
     $('#csvBtn').onclick = () => download(`Klassenarbeiten-${sy}.csv`, K.toCSV(S.state.settings, S.state.entries), 'text/csv;charset=utf-8');
     $('#bakBtn').onclick = async () => {
       try { const b = await api('GET', '/api/admin/backup'); download(`Klassenarbeitsplaner-Sicherung-${K.todayISO()}.json`, JSON.stringify(b, null, 1), 'application/json'); }
@@ -1072,7 +1095,7 @@
     };
     $('#pwBtn').onclick = async () => {
       $('#pwErr').textContent = '';
-      try { await api('PUT', '/api/admin/password', { password: $('#pwNew').value }); $('#pwNew').value = ''; toast('Kollegiums-Passwort geändert'); }
+      try { await api('PUT', '/api/admin/password', { password: $('#pwNew').value }); $('#pwNew').value = ''; toast('Kollegiums-Passwort geändert, QR-Code erneuert'); drawQR(); }
       catch (e) { adminError(e, $('#pwErr')); }
     };
     $('#resFile').onchange = async e => {
