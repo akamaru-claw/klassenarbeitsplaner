@@ -166,9 +166,9 @@ table.plan { border-collapse: collapse; border-spacing: 0; font-size: 14px; tabl
 
 /* Tablet-/iPad-Landscape: kompakte Spalten, damit alle Klassen nebeneinander passen */
 @media (orientation: landscape) and (max-width: 1260px) {
-  table.plan { font-size: 12px; }
-  .plan col.cd { width: 48px !important; min-width: 48px !important; }
-  .plan col.cc { width: 36px !important; min-width: 36px !important; }
+  table.plan { width: 100%; font-size: 12px; }
+  .plan col.cd { width: 48px; min-width: 48px; }
+  .plan col.cc { width: 36px; min-width: 36px; }
   .plan .cd { padding: 0 4px; font-size: 11px; }
   .plan thead .cd { padding: 0 4px; }
   .colhead { font-size: 12px; min-height: 30px; }
@@ -184,8 +184,9 @@ table.plan { border-collapse: collapse; border-spacing: 0; font-size: 14px; tabl
 
 /* Portrait-Tablets: etwas mehr Platz pro Zelle, aber trotzdem kompakt */
 @media (orientation: portrait) and (max-width: 900px) {
-  .plan col.cd { width: 64px !important; min-width: 64px !important; }
-  .plan col.cc { width: 42px !important; min-width: 42px !important; }
+  table.plan { width: 100%; }
+  .plan col.cd { width: 64px; min-width: 64px; }
+  .plan col.cc { width: 42px; min-width: 42px; }
   .plan .cd { padding: 0 5px; }
   .colhead { font-size: 13px; }
 }
@@ -438,8 +439,9 @@ fieldset label { display: flex; gap: 10px; align-items: center; min-height: 34px
   .views button { flex: 1; padding: 6px 8px; }
   .bar { padding: 8px 12px; }
   .bar .grades { width: 100%; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
-  .plan col.cd { width: 78px !important; min-width: 78px !important; }
-  .plan col.cc { width: 50px !important; min-width: 50px !important; }
+  table.plan { width: 100%; }
+  .plan col.cd { width: 78px; min-width: 78px; }
+  .plan col.cc { width: 50px; min-width: 50px; }
   .plan .cd { min-width: 78px; width: 78px; padding: 0 6px; }
   .cls .wkc { width: 64px; }
   .cls .wkc span { display: none; }
