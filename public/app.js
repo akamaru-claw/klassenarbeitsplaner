@@ -226,8 +226,8 @@
     const set = S.state.settings, cal = K.calendar(set), I = indexState(), today = K.todayISO();
     const n = cols.length;
     const colClass = forPrint ? 'cc' : 'cc';
-    let h = `<table class="plan${forPrint ? ' p-plan' : ''}"><colgroup><col class="cd">`;
-    h += cols.map(() => `<col class="${colClass}">`).join('');
+    let h = `<table class="plan${forPrint ? ' p-plan' : ''}"><colgroup><col class="cd" style="width:92px;min-width:92px">`;
+    h += cols.map(() => `<col class="${colClass}" style="width:62px;min-width:62px">`).join('');
     h += `</colgroup><thead><tr><th class="cd" scope="col"><span class="sr">Datum</span></th>`;
     h += cols.map(c => forPrint ? `<th scope="col">${esc(c)}</th>`
       : `<th scope="col"><button type="button" class="colhead" data-cls="${esc(c)}" title="Plan der ${esc(c)} öffnen">${esc(c)}</button></th>`).join('');
