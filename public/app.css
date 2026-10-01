@@ -434,6 +434,8 @@ fieldset label { display: flex; gap: 10px; align-items: center; min-height: 34px
   .views button { flex: 1; padding: 6px 8px; }
   .bar { padding: 8px 12px; }
   .bar .grades { width: 100%; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
+  .plan col.cd { width: 78px; min-width: 78px; }
+  .plan col.cc { width: 50px; min-width: 50px; }
   .plan .cd { min-width: 78px; width: 78px; padding: 0 6px; }
   .cls .wkc { width: 64px; }
   .cls .wkc span { display: none; }
@@ -442,6 +444,12 @@ fieldset label { display: flex; gap: 10px; align-items: center; min-height: 34px
   .strip { grid-template-columns: 34px repeat(5, 1fr); }
   .hide-sm { display: none; }
   .show-sm { display: inline; }
+  .colhead { font-size: 13px; min-height: 32px; }
+  table.plan { font-size: 8pt; width: 100%; }
+  .plan thead th { position: static; height: auto; padding: 3px 0; }
+  .plan .cd { position: static; min-width: 0; width: 78px; padding: 0 6px; }
+  .plan thead .cd { position: sticky; top: 0; z-index: 3; }
+  .sl i { width: 9px; height: 7px; }
 }
 @media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
 

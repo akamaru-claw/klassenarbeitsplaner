@@ -225,7 +225,10 @@
   function planTable(cols, from, to, forPrint) {
     const set = S.state.settings, cal = K.calendar(set), I = indexState(), today = K.todayISO();
     const n = cols.length;
-    let h = `<table class="plan${forPrint ? ' p-plan' : ''}"><thead><tr><th class="cd" scope="col"><span class="sr">Datum</span></th>`;
+    const colClass = forPrint ? 'cc' : 'cc';
+    let h = `<table class="plan${forPrint ? ' p-plan' : ''}"><colgroup><col class="cd">`;
+    h += cols.map(() => `<col class="${colClass}">`).join('');
+    h += `</colgroup><thead><tr><th class="cd" scope="col"><span class="sr">Datum</span></th>`;
     h += cols.map(c => forPrint ? `<th scope="col">${esc(c)}</th>`
       : `<th scope="col"><button type="button" class="colhead" data-cls="${esc(c)}" title="Plan der ${esc(c)} öffnen">${esc(c)}</button></th>`).join('');
     h += '</tr></thead><tbody>';
