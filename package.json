@@ -1,0 +1,12 @@
+{
+  "name": "klassenarbeitsplaner",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Klassenarbeitsplaner für das Kollegium – Mauritius-Gymnasium Büren",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "demo": "node tools/build-demo.js"
+  },
+  "engines": { "node": ">=20" }
+}
