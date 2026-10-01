@@ -120,6 +120,20 @@
 
   // ------------------------------------------------------------ Start
   async function boot() {
+    // Auto-Login via QR-Code (?login=Passwort)
+    const params = new URLSearchParams(location.search);
+    const autoPw = params.get('login');
+    if (autoPw) {
+      try {
+        await api('POST', '/api/login', { password: autoPw, role: 'staff' });
+        S.role = 'staff';
+        params.delete('login');
+        history.replaceState(null, '', location.pathname + (params.toString() ? '?' + params.toString() : ''));
+        await startApp();
+        toast('Automatisch angemeldet.');
+        return;
+      } catch (e) { /* fall through to normal login */ }
+    }
     try { S.role = (await api('GET', '/api/session')).role; } catch (e) { S.role = null; }
     if (!S.role) return renderLogin();
     await startApp();
