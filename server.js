@@ -236,11 +236,13 @@ async function api(req, res, url) {
 }
 
 // --------------------------------------------------------- Statische Dateien
+// ------------------------------------------------------------------ Statische Dateien
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
   '.png': 'image/png', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.txt': 'text/plain; charset=utf-8',
   '.webmanifest': 'application/manifest+json', '.ico': 'image/x-icon'
 };
+const ASSET_RE = /(href|src)="(app\.css|core\.js|app\.js)"/g;
 function serveStatic(req, res, pathname) {
   if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405); return res.end(); }
   let rel;
@@ -255,13 +257,25 @@ function serveStatic(req, res, pathname) {
     }
     const ext = path.extname(file);
     const tag = `"${st.size.toString(36)}-${st.mtimeMs.toString(36)}"`;
-    const longCache = ext === '.woff2' || ext === '.png';
+    const longCache = ext === '.woff2' || ext === '.png' || ext === '.jpg' || ext === '.jpeg' || ext === '.gif' || ext === '.webp' || ext === '.ico';
+    const cc = longCache ? 'public, max-age=2592000' : 'no-store, no-cache, must-revalidate';
     const headers = {
       'Content-Type': TYPES[ext] || 'application/octet-stream',
-      'Cache-Control': longCache ? 'public, max-age=2592000' : 'no-cache',
+      'Cache-Control': cc,
       ETag: tag
     };
     if (req.headers['if-none-match'] === tag) { res.writeHead(304, headers); return res.end(); }
+    if (rel === '/index.html') {
+      return fs.readFile(file, 'utf8', (err2, data) => {
+        if (err2) { res.writeHead(500); return res.end(); }
+        const v = Math.floor(st.mtimeMs).toString(36);
+        const body = data.replace(ASSET_RE, (_, attr, name) => `${attr}="${name}?v=${v}"`);
+        const out = Buffer.from(body, 'utf8');
+        res.writeHead(200, Object.assign(headers, { 'Content-Length': out.length }));
+        if (req.method === 'HEAD') return res.end();
+        res.end(out);
+      });
+    }
     res.writeHead(200, Object.assign(headers, { 'Content-Length': st.size }));
     if (req.method === 'HEAD') return res.end();
     fs.createReadStream(file).pipe(res);
