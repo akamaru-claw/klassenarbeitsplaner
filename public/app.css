@@ -150,6 +150,8 @@ main { flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: colu
 /* ------------------------------------------------------------ Gesamtplan */
 .gridwrap { flex: 1; min-height: 0; min-width: 0; width: 100%; max-width: 100%; overflow: auto; -webkit-overflow-scrolling: touch; background: var(--paper); overscroll-behavior: contain; touch-action: pan-x pan-y; will-change: transform; }
 table.plan { border-collapse: separate; border-spacing: 0; font-size: 14px; table-layout: fixed; max-width: none; }
+.plan col.cd { width: 92px; min-width: 92px; }
+.plan col.cc { width: 62px; min-width: 62px; }
 .plan th, .plan td { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 0; overflow: hidden; }
 .plan thead th {
   position: sticky; top: 0; z-index: 3; background: var(--paper);
@@ -166,9 +168,10 @@ table.plan { border-collapse: separate; border-spacing: 0; font-size: 14px; tabl
 /* Tablet-/iPad-Landscape: kompakte Spalten, damit alle Klassen nebeneinander passen */
 @media (orientation: landscape) and (max-width: 1260px) {
   table.plan { font-size: 12px; }
-  .plan .cd { min-width: 48px !important; width: 48px !important; padding: 0 4px !important; font-size: 11px; }
-  .plan thead .cd { padding: 0 4px !important; }
-  .plan th:not(.cd), .plan td.cell, .plan td.slots, .plan td.term { min-width: 36px !important; width: 36px !important; }
+  .plan col.cd { width: 48px; min-width: 48px; }
+  .plan col.cc { width: 36px; min-width: 36px; }
+  .plan .cd { padding: 0 4px; font-size: 11px; }
+  .plan thead .cd { padding: 0 4px; }
   .colhead { font-size: 12px; min-height: 30px; }
   .plan tr.day > * { height: 30px; }
   .plan tr.day .cd { font-size: 11px; }
@@ -182,8 +185,9 @@ table.plan { border-collapse: separate; border-spacing: 0; font-size: 14px; tabl
 
 /* Portrait-Tablets: etwas mehr Platz pro Zelle, aber trotzdem kompakt */
 @media (orientation: portrait) and (max-width: 900px) {
-  .plan .cd { min-width: 64px; width: 64px; padding: 0 5px; }
-  .plan th:not(.cd), .plan td.cell, .plan td.slots, .plan td.term { min-width: 42px; width: 42px; }
+  .plan col.cd { width: 64px; min-width: 64px; }
+  .plan col.cc { width: 42px; min-width: 42px; }
+  .plan .cd { padding: 0 5px; }
   .colhead { font-size: 13px; }
 }
 .colhead {
